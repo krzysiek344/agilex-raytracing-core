@@ -23,7 +23,8 @@ module rtu_core
 
     typedef enum logic [2:0] {
         ST_IDLE,
-        ST_FETCH,
+        ST_FETCH0, 
+        ST_FETCH1,
         ST_DECODE,
         ST_AABB,
         ST_SPHERE,
@@ -41,10 +42,16 @@ module rtu_core
     vec3_dir_t   best_n;
     logic [15:0] best_prim;
 
-    logic [31:0]  node_addr_r;
-    logic [127:0] node_word_r;
+    // memory 
+    logic [15:0]  node_idx_r;
+    logic [127:0] node_w0_r;
+    logic [127:0] node_w1_r;
 
-    wire is_leaf = node_word_r[0];
+    wire        is_leaf    =  node_w0_r[0];
+    wire [31:0] mem_addr_w = {15'd0, node_idx_r, 1'b0};
+
+    wire [15:0] child_l = node_w0_r[31:16];
+    wire [15:0] child_r = node_w0_r[47:32];
 
     localparam int STACK_DEPTH = 16;
     logic [31:0] stack_mem [0:STACK_DEPTH-1];
@@ -58,19 +65,27 @@ module rtu_core
 
     always_comb begin
         state_n    = state;
+        mem_addr   = 32'd0;
         mem_req    = 1'b0;
-        mem_addr   = node_addr_r;
         mem_rready = 1'b0;
 
         unique case (state)
             ST_IDLE: begin
                 if (accept_ray)
-                    state_n = ST_FETCH;
+                    state_n = ST_FETCH0;
             end
 
-            ST_FETCH: begin
+            ST_FETCH0: begin
                 mem_req    = 1'b1;
-                mem_addr   = node_addr_r;
+                mem_addr   = {15'b0, node_idx_r, 1'b0};
+                mem_rready = 1'b1;
+                if (mem_valid)
+                    state_n = ST_FETCH1;
+            end
+
+            ST_FETCH1: begin
+                mem_req = 1'b1;
+                mem_addr = {15'd0, node_idx_r, 1'b1};
                 mem_rready = 1'b1;
                 if (mem_valid)
                     state_n = ST_DECODE;
@@ -84,7 +99,7 @@ module rtu_core
             end
 
             ST_AABB: begin
-                state_n = ST_FETCH;
+                state_n = ST_FETCH0;
             end
 
             ST_SPHERE: begin
@@ -106,8 +121,9 @@ module rtu_core
             best_t   <= T_MAX;
             ray_r    <= '0;
             kind_r   <= PRIMARY;
-            node_addr_r <= '0;
-            node_word_r <= '0;
+            node_idx_r <= '0;
+            node_w0_r  <= '0;
+            node_w1_r  <= '0;
             best_pos <= '0;
             best_n   <= '0;
             best_prim <= '0;
@@ -118,7 +134,7 @@ module rtu_core
             if (accept_ray) begin
                 ray_r       <= in_ray;
                 kind_r      <= in_kind;
-                node_addr_r <= 32'd0;
+                node_idx_r  <= '0;
                 sp          <= '0;
                 best_hit    <= 1'b0;
                 best_t      <= T_MAX;
@@ -127,8 +143,14 @@ module rtu_core
                 best_prim   <= '0;
             end
 
-            if (state == ST_FETCH && mem_valid)
-                node_word_r <= mem_rdata;
+            if (state == ST_FETCH0 && mem_valid)
+                node_w0_r <= mem_rdata;
+
+            if (state == ST_FETCH1 && mem_valid)
+                node_w1_r <= mem_rdata;
+
+            if (state == ST_AABB)
+                node_idx_r <= child_l;  
 
             if (state_n == ST_DONE) begin
                 out_hit.pixel_id <= ray_r.pixel_id;
