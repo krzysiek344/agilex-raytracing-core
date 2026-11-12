@@ -75,8 +75,6 @@ module tb_shu_core;
     endtask
 
     initial begin
-        hit_t h;
-
         clk = 1'b0;
         forever #5ns clk = ~clk;
     end

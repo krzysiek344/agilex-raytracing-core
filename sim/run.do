@@ -10,7 +10,7 @@ if {[llength $argv] == 0} {
     set TB [lindex $argv 0]
 }
 
-vlib work
+catch {vlib work}
 
 vlog -sv \
     rtl/pkg/rt_pkg.sv \

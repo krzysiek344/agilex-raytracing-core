@@ -58,8 +58,6 @@ module tb_ray_gen;
 
         $display("OK ray pid=%0d dir=(%0d,%0d,%0d)",
                  out_ray.pixel_id, out_ray.dir.x, out_ray.dir.y, out_ray.dir.z);
-
-        @(negedge clk);
     endtask
 
     initial begin
