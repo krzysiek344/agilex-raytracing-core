@@ -37,28 +37,32 @@ module tb_ray_gen;
     endtask
 
     task automatic check_ray(
-        int      exp_pid,
-        q1_15_t  exp_dx,
-        q1_15_t  exp_dy,
-        q1_15_t  exp_dz
+    	int      exp_pid,
+    	q1_15_t  exp_dx,
+    	q1_15_t  exp_dy,
+    	q1_15_t  exp_dz
     );
-        out_ready = 1'b1;
-        do @(negedge clk); while (!(out_valid && out_ready));
+    out_ready = 1'b0;
+    do @(negedge clk); while (!out_valid);
 
-        assert (out_ray.pixel_id === exp_pid)
-        else $error("pixel_id: got %0d exp %0d", out_ray.pixel_id, exp_pid);
+    assert (out_ray.pixel_id === exp_pid)
+    else $error("pixel_id: got %0d exp %0d", out_ray.pixel_id, exp_pid);
 
-        assert (out_ray.dir.x === exp_dx &&
-                out_ray.dir.y === exp_dy &&
-                out_ray.dir.z === exp_dz)
-        else $error("dir pid=%0d: got (%0d,%0d,%0d) exp (%0d,%0d,%0d)",
-                    exp_pid,
-                    out_ray.dir.x, out_ray.dir.y, out_ray.dir.z,
-                    exp_dx, exp_dy, exp_dz);
+    assert (out_ray.dir.x === exp_dx &&
+            out_ray.dir.y === exp_dy &&
+            out_ray.dir.z === exp_dz)
+    else $error("dir pid=%0d: got (%0d,%0d,%0d) exp (%0d,%0d,%0d)",
+                exp_pid,
+                out_ray.dir.x, out_ray.dir.y, out_ray.dir.z,
+                exp_dx, exp_dy, exp_dz);
 
-        $display("OK ray pid=%0d dir=(%0d,%0d,%0d)",
-                 out_ray.pixel_id, out_ray.dir.x, out_ray.dir.y, out_ray.dir.z);
-    endtask
+    $display("OK ray pid=%0d dir=(%0d,%0d,%0d)",
+             out_ray.pixel_id, out_ray.dir.x, out_ray.dir.y, out_ray.dir.z);
+
+    out_ready = 1'b1;
+    @(negedge clk);
+    out_ready = 1'b0;
+endtask
 
     initial begin
         clk = 1'b0;
