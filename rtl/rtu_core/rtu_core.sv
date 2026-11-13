@@ -110,6 +110,7 @@ module rtu_core
                 if (accept_hit)
                     state_n = ST_IDLE;
             end
+	    default: state_n = ST_IDLE;
         endcase
     end
 
