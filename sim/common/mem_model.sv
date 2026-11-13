@@ -2,7 +2,6 @@
 
 module mem_model
 #(
-    parameter string HEX_FILE = "tools/out/scene_sphere.hex",
     parameter int    DEPTH    = 256
 )(
     input  logic         clk,
@@ -16,13 +15,16 @@ module mem_model
     input  logic         mem_rready,
     output logic [127:0] mem_rdata
 );
+    
+    localparam int AW = $clog2(DEPTH);
 
     logic [127:0] mem [0:DEPTH-1];
 
     initial begin
+
         for (int i = 0; i < DEPTH; ++i)
             mem[i] = '0;
-        $readmemh(HEX_FILE, mem);
+        $readmemh("tools/out/scene_sphere.hex", mem);
     end
 
     assign mem_ready = 1'b1;
@@ -31,13 +33,11 @@ module mem_model
         if (!rst_n) begin
             mem_valid <= 1'b0;
             mem_rdata <= '0;
-        end else begin
-            if (mem_req && mem_ready) begin
-                mem_valid <= 1'b1;
-                mem_rdata <= mem[mem_addr[$clog2(DEPTH)-1:0]];
-            end else if (mem_valid && mem_rready) begin
-                mem_valid <= 1'b0;
-            end
+    	end else if (mem_valid) begin
+	    mem_valid <= 1'b0;
+	end else if (mem_req) begin
+            mem_valid <= 1'b1;
+	    mem_rdata <= mem[mem_addr[AW-1:0]];
         end
     end
 

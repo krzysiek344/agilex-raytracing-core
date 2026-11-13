@@ -38,9 +38,10 @@ module tb_shu_core;
 
     task automatic drive_hit(hit_t h);
         in_hit = h;
-        @(negedge clk);
-        in_valid = 1'b1;
+
         do @(negedge clk); while (!in_ready);
+
+        in_valid = 1'b1;
         @(negedge clk);
         in_valid = 1'b0;
     endtask

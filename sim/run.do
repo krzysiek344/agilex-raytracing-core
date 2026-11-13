@@ -9,6 +9,7 @@ if {![info exists TB]} {
     }
 }
 echo "Simulating: $TB"
+echo "CWD=[pwd]"
 
 catch {vlib work}
 

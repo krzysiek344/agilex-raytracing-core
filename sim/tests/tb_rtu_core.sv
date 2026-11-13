@@ -41,9 +41,10 @@ module tb_rtu_core;
     task automatic send_ray(ray_t r, ray_kind_t k);
         in_ray  = r;
         in_kind = k;
-        @(negedge clk);
-        in_valid = 1'b1;
+
         do @(negedge clk); while (!in_ready);
+
+        in_valid = 1'b1;
         @(negedge clk);
         in_valid = 1'b0;
     endtask
