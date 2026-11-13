@@ -86,9 +86,8 @@ module tb_rtu_core;
         assert (out_hit.kind === PRIMARY)
         else $error("kind: expected PRIMARY");
 
-        // best_hit not set
-        assert (out_hit.hit === 1'b0)
-        else $error("hit: expected 0 for current stub");
+        assert (out_hit.hit === 1'b1)
+        else $error("hit: expected 1 for sphere scene");
 
         $display("DONE tb_rtu_core");
         $finish;

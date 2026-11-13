@@ -53,6 +53,12 @@ module rtu_core
     wire [15:0] child_l = node_w0_r[31:16];
     wire [15:0] child_r = node_w0_r[47:32];
 
+    wire [15:0]   leaf_prim = node_w0_r[15:1];
+    wire q16_16_t leaf_cx   = node_w0_r[79:48];
+    wire q16_16_t leaf_cy   = node_w0_r[111:80];
+    wire q16_16_t leaf_cz   = node_w1_r[31:0];
+    wire q16_16_t leaf_r    = node_w1_r[63:32];
+
     localparam int STACK_DEPTH = 16;
     logic [31:0] stack_mem [0:STACK_DEPTH-1];
     logic [$clog2(STACK_DEPTH):0] sp;
@@ -153,7 +159,23 @@ module rtu_core
             if (state == ST_AABB)
                 node_idx_r <= child_l;  
 
-            if (state_n == ST_DONE) begin
+            if (state == ST_SPHERE) begin
+                if ( (ray_r.origin.x - leaf_cx) * (ray_r.origin.x - leaf_cx) +
+                    (ray_r.origin.y - leaf_cy) * (ray_r.origin.y - leaf_cy)
+                    <= leaf_r * leaf_r ) begin
+                    best_hit   <= 1'b1;
+                    best_t     <= leaf_cz - ray_r.origin.z;
+                    best_pos.x <= leaf_cx;
+                    best_pos.y <= leaf_cy;
+                    best_pos.z <= leaf_cz;
+                    best_n.x   <= 16'sh0;
+                    best_n.y   <= 16'sh0;
+                    best_n.z   <= 16'sh7FFF;
+                    best_prim  <= leaf_prim;
+                end
+            end
+
+            if (state == ST_DONE) begin
                 out_hit.pixel_id <= ray_r.pixel_id;
                 out_hit.frame_id <= ray_r.frame_id;
                 out_hit.kind     <= kind_r;

@@ -79,12 +79,7 @@ module shu_core
             end
 
             ST_SHADE: begin
-                if (!hit_r.hit)
-                    state_n = ST_EMIT_PIX;
-                else if (NUM_LIGHTS > 0)
-                    state_n = ST_EMIT_SEC;
-                else
-                    state_n = ST_EMIT_PIX;
+                state_n = ST_EMIT_PIX;
             end
 
             ST_EMIT_SEC: begin
@@ -135,19 +130,7 @@ module shu_core
             end
 
             if (state == ST_SHADE) begin
-                if (!hit_r.hit) begin
-                    partial_rgb_r <= '0;
-                end else begin
-                    ldir_r  <= dir_to_light(hit_r.pos, cfg_light_pos);
-                    ndotl_r <= sat_ndotl(hit_r.normal, ldir_r);
-                    partial_rgb_r <= scale_rgb(cfg_albedo, ndotl_r, cfg_light_rgb);
-
-                    sec_ray.pixel_id <= hit_r.pixel_id;
-                    sec_ray.frame_id <= hit_r.frame_id;
-                    sec_ray.origin   <= hit_r.pos;
-                    sec_ray.dir      <= ldir_r;
-                    pending_r        <= 1'b1;
-                end
+                partial_rgb_r <= hit_r.hit ? cfg_albedo : '0;
             end
 
             if (state == ST_WAIT_SEC && accept_in && in_hit.kind == SHADOW) begin
@@ -156,7 +139,7 @@ module shu_core
                 pending_r <= 1'b0;
             end
 
-            if (state_n == ST_EMIT_PIX || state == ST_APPLY) begin
+            if (state == ST_EMIT_PIX) begin
                 out_pixel.pixel_id     <= pix_r;
                 out_pixel.frame_id     <= frame_r;
                 out_pixel.rgb          <= partial_rgb_r;

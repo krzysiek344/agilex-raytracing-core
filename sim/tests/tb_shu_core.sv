@@ -111,7 +111,6 @@ module tb_shu_core;
                 out_pixel.rgb.b === '0)
         else $error("miss rgb: expected black");
 
-        // B: PRIMARY hit → shadow → pixel
         h = '0;
         h.pixel_id = 21'd2;
         h.kind     = PRIMARY;
@@ -119,8 +118,15 @@ module tb_shu_core;
         h.pos      = '{x: 0, y: 0, z: 0};
         h.normal   = '{x: 0, y: 16'sh7FFF, z: 0};
         drive_hit(h);
-        wait_sec_and_reply(1'b0);
         wait_pixel();
+
+        assert (out_pixel.pixel_id === 21'd2)
+        else $error("hit pixel_id: got %0d", out_pixel.pixel_id);
+
+        assert (out_pixel.rgb.r === cfg_albedo.r &&
+                out_pixel.rgb.g === cfg_albedo.g &&
+                out_pixel.rgb.b === cfg_albedo.b)
+        else $error("hit rgb: expected albedo");
 
         assert (out_pixel.pixel_id === 21'd2)
         else $error("hit pixel_id: got %0d", out_pixel.pixel_id);
